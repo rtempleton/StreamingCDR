@@ -1,0 +1,656 @@
+[ {
+  "name" : "col1",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "Cdr_seq",
+  "type" : "LONG",
+  "format" : ""
+}, {
+  "name" : "File_seq",
+  "type" : "LONG",
+  "format" : ""
+}, {
+  "name" : "Gc_id",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "Update_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "Event_order",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "Call_status",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "R_Call_Type",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "CPN",
+  "type" : "STRING",
+  "format" : "",
+  "nullVal" : "0"
+}, {
+  "name" : "CN",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "DN",
+  "type" : "STRING",
+  "format" : "",
+  "nullVal" : "0"
+}, {
+  "name" : "Addr_Nature",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_OLI",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_lrn",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col16",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_carrier_si",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_cce_id",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_tg_protocol",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_tg_type",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_tg_id",
+  "type" : "INTEGER",
+  "format" : "",
+  "nullVal" : "0"
+}, {
+  "name" : "I_iam_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "I_gateway",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_card",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_span",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_channel",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_d_channel",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_call_ref",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_cc_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "I_acm_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "I_anm_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "R_tn",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "R_lrn",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "R_carrier_ic",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_rel_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "I_rlc_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "I_rel_cause",
+  "type" : "INTEGER",
+  "format" : "",
+  "nullVal" : "0"
+}, {
+  "name" : "E_cce_id",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_protocol",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_tg_type",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_tg_id",
+  "type" : "INTEGER",
+  "format" : "",
+  "nullVal" : "0"
+}, {
+  "name" : "E_setup_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "E_gateway",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_card",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_span",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_channel",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_d_channel",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_call_ref",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_cc_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "E_acm_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "E_anm_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "E_rel_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "E_rlc_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "E_rel_cause",
+  "type" : "INTEGER",
+  "format" : "",
+  "nullVal" : "0"
+}, {
+  "name" : "col55",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col56",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_gateway_name",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_gateway_name",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_tg_name",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_tg_name",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_gw_ip",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_gw_ip",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col63",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_card_port",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_card_path",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_card_port",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_card_path",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_tg_number",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_tg_number",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_orig_dn",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_orig_dn_addr_nature",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "col72",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_jip",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_jip",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_bearer",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_bearer",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_tns_carrier_c",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_presentation_n",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_int_rel_cause",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_int_rel_cause",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_dn",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_dn_noa",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_conn_n",
+  "type" : "DOUBLE",
+  "format" : ""
+}, {
+  "name" : "E_conn_n_noa",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "Cpn_pi",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_IRI",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_ORI",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_ext_call_id",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_ext_call_id",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_charge",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_charge",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_partialcli",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_nationalfci",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_last_div_line_id",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col95",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col96",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col97",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_packet_sent",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_packet_reveived",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_packet_lost",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_packet_transferred",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_byte_sent",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_byte_received",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_byte_lost",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_jitter",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_latency",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_packet_sent",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_packet_received",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_packet_lost",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_packet_transferred",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_byte_sent",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_byte_received",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_byte_lost",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_jitter",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_latency",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_CIC",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_CIC",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_codec",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_codec",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_local_gw_id",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_local_gw_id",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_cas_cc_t",
+  "type" : "TIMESTAMP",
+  "format" : "yyyy-MM-dd+HH:mm:ss.S"
+}, {
+  "name" : "E_cas_cc_t",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_zzcode",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_zzcode",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_country_adr_type",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_country_adr_type",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col128",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_part",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_part",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "I_service",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_service",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "Early_events",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "I_cause_loc",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_cause_loc",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "col136",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "E_called_party_cat",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "Call_duration_cust",
+  "type" : "FLOAT",
+  "format" : "",
+  "nullVal" : "0.0"
+}, {
+  "name" : "I_rel_direction",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "E_rel_direction",
+  "type" : "INTEGER",
+  "format" : ""
+}, {
+  "name" : "col141",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col142",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col143",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col144",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col145",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col146",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col147",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col148",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col149",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col150",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col151",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col152",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col153",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col154",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col155",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col156",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col157",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col158",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col159",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col160",
+  "type" : "STRING",
+  "format" : ""
+}, {
+  "name" : "col161",
+  "type" : "STRING",
+  "format" : ""
+  }, {
+    "name" : "col162",
+    "type" : "STRING",
+    "format" : ""
+  }, {
+    "name" : "col163",
+    "type" : "STRING",
+    "format" : ""
+} ]
