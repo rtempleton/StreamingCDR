@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.storm.task.OutputCollector;
@@ -21,9 +19,7 @@ import org.apache.storm.tuple.Tuple;
 
 import com.github.rtempleton.operators.trie.LongestSequenceTrie;
 import com.github.rtempleton.operators.trie.Trie;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.rtempleton.poncho.StormUtils;
 
 public class EnrichInternationalCallsBolt implements IRichBolt {
 	
@@ -34,9 +30,11 @@ public class EnrichInternationalCallsBolt implements IRichBolt {
 	private OutputCollector collector;
 	
 	private final Trie trie = new LongestSequenceTrie();
+	private final String JDBCConString;
 	
 	public EnrichInternationalCallsBolt(Properties props, List<String> inputFields) {
 		this.inputFields = inputFields;
+		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
 	}
 
 	@Override
@@ -45,9 +43,9 @@ public class EnrichInternationalCallsBolt implements IRichBolt {
 		
 		
 		//populate the Trie with the geogrpahy info from the dim table
-		String query = "select dial_code, geo_id from cdrdwh.geography_dim where dial_code > '1'";
+		final String query = "select dial_code, geo_id from cdrdwh.geography_dim where dial_code > '1'";
 		try{
-			Connection con = DriverManager.getConnection("jdbc:phoenix:sandbox.hortonworks.com:2181:/hbase-unsecure");
+			Connection con = DriverManager.getConnection(JDBCConString);
 			PreparedStatement stmt = con.prepareStatement(query);
 			ResultSet rset = stmt.executeQuery();
 			while (rset.next()){

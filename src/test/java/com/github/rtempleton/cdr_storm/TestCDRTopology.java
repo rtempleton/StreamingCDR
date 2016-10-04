@@ -16,7 +16,7 @@ public class TestCDRTopology extends AbstractTestCase {
 	private final String CDR_SCHEMA = getResourcePath("cdr_schema.json");
 	
 	
-	@Ignore	
+	@Ignore
 	public void loadCDRDataTest(){
 		TextFileProducer producer = new TextFileProducer(PRODUCER_CONFIG, CDR_DATA);
 		producer.run();
@@ -33,7 +33,7 @@ public class TestCDRTopology extends AbstractTestCase {
 		
 		cluster.submitTopology("CDRTopology", conf, builder.createTopology());
 	
-		Thread.sleep(30000);
+		Thread.sleep(60000);
 		
 		cluster.killTopology("CDRTopology");
 		System.out.println("Finsihed!!!");

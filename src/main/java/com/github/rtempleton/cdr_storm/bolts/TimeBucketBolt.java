@@ -20,6 +20,7 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.joda.time.DateTime;
 
+import com.github.rtempleton.poncho.StormUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -38,10 +39,12 @@ public class TimeBucketBolt implements IRichBolt {
 	private final String date_id = "date_id";
 	private OutputCollector collector;
 	
+	private final String JDBCConString;
 	private LoadingCache<String, Integer> cache;
 	
 	public TimeBucketBolt(Properties props, List<String> inputFields) {
 		this.inputFields = inputFields;
+		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
 	}
 
 	@Override
@@ -61,7 +64,7 @@ public class TimeBucketBolt implements IRichBolt {
 	@Override
 	public void execute(Tuple input) {
 		DateTime ts = new DateTime(input.getValueByField("I_iam_t"));
-		float dur = input.getFloatByField("Call_duration_cust");
+		float dur = input.getFloatByField("call_duration_cust");
 		DateTime added = ts.plusSeconds((int)dur);
 		int time_id = (added.getHourOfDay()*3600 + added.getMinuteOfHour()*60 + added.getSecondOfMinute())/900;
 		String key = added.getYear() + "-" + added.getDayOfYear();
@@ -74,6 +77,9 @@ public class TimeBucketBolt implements IRichBolt {
 		}
 		List<Object> vals = input.getValues();
 		vals.add(time_id);
+		
+		//STORM-2062 - If using Hive streaming you must make this value a String in order to suppoort Hive parititons
+		//vals.add(Integer.toString(date_id));
 		vals.add(date_id);
 		//direct Addr_Nature == 3 calls to domestic output stream, otherwise send them out on the international output stream
 		if(input.getStringByField("Addr_Nature").equals("3"))
@@ -110,7 +116,7 @@ public class TimeBucketBolt implements IRichBolt {
 		String query = "select DATE_ID from cdrdwh.date_dim where YEAR_VAL = " + keys[0] + " and DAY_OF_YEAR = " + keys[1];
 		Integer i =0;
 		try{
-			Connection con = DriverManager.getConnection("jdbc:phoenix:sandbox.hortonworks.com:2181:/hbase-unsecure");
+			Connection con = DriverManager.getConnection(JDBCConString);
 			PreparedStatement stmt = con.prepareStatement(query);
 			ResultSet rset = stmt.executeQuery();
 			while (rset.next()){

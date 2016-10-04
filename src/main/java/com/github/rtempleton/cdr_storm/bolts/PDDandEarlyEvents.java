@@ -40,14 +40,14 @@ public class PDDandEarlyEvents implements IRichBolt {
 		
 		//find the positions of the output fields we will be populating only once!
 		if(!setup){
-			i_pdd_pos = outputFields.fieldIndex("I_PDD");
-			e_pdd_pos = outputFields.fieldIndex("E_PDD");
+			i_pdd_pos = outputFields.fieldIndex("i_pdd");
+			e_pdd_pos = outputFields.fieldIndex("e_pdd");
 			connect_pos = outputFields.fieldIndex("connect");
-			ee_pos = outputFields.fieldIndex("earlyEvent");
+			ee_pos = outputFields.fieldIndex("early_event");
 			rte_pos = outputFields.fieldIndex("route");
 			e_tg_id_pos = outputFields.fieldIndex("E_tg_id");
 			e_rel_cause_pos = outputFields.fieldIndex("E_rel_cause");
-			call_dur_pos = outputFields.fieldIndex("Call_duration_cust");
+			call_dur_pos = outputFields.fieldIndex("call_duration_cust");
 			setup = true;
 		}
 		
@@ -182,10 +182,10 @@ public class PDDandEarlyEvents implements IRichBolt {
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		//append the field names that will be added by this bolt
 		final ArrayList<String> outputFields = new ArrayList<String>(this.inputFields);
-		outputFields.add("I_PDD");
-		outputFields.add("E_PDD");
+		outputFields.add("i_pdd");
+		outputFields.add("e_pdd");
 		outputFields.add("connect");
-		outputFields.add("earlyEvent");
+		outputFields.add("early_event");
 		outputFields.add("route");
 		this.outputFields = new Fields(outputFields);
 		declarer.declare(this.outputFields);

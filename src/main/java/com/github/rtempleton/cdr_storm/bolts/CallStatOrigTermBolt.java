@@ -43,6 +43,7 @@ public class CallStatOrigTermBolt implements IRichBolt {
 
 	@Override
 	public void execute(Tuple input) {
+		
 		//filter out non S or U Call_status records
 		if(input.getStringByField(callStatField)!= null && input.getStringByField(callStatField).equals("S") || input.getStringByField(callStatField).equals("U")){
 			List<Object> vals = input.getValues();

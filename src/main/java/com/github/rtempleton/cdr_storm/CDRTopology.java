@@ -19,6 +19,7 @@ import com.github.rtempleton.cdr_storm.bolts.DimLookupBolt;
 import com.github.rtempleton.cdr_storm.bolts.EnrichDomesticCallsBolt;
 import com.github.rtempleton.cdr_storm.bolts.EnrichInternationalCallsBolt;
 import com.github.rtempleton.cdr_storm.bolts.PDDandEarlyEvents;
+import com.github.rtempleton.cdr_storm.bolts.PutHBaseFact2;
 import com.github.rtempleton.cdr_storm.bolts.TimeBucketBolt;
 import com.github.rtempleton.poncho.SelectFieldsBolt;
 import com.github.rtempleton.poncho.SelectFieldsBolt.SelectType;
@@ -84,45 +85,32 @@ public class CDRTopology{
 		builder.setBolt("dimlookup", dimlookup).localOrShuffleGrouping("pdd");
 		
 		//list the fields we want to keep in the order we want them output.
-		List<String> selectFields = Arrays.asList(new String[]{"date_id","time_id","cust_id","vend_id","geo_id","cust_rel_id","vend_rel_id","route","connect","earlyEvent","Call_duration_cust","I_PDD","E_PDD"});
-		
+		List<String> selectFields = Arrays.asList(new String[]{"geo_id","date_id","time_id","cust_id","vend_id","cust_rel_id","vend_rel_id","route","connect","early_event","call_duration_cust","i_pdd","e_pdd","orig_number","term_number"});
 		IRichBolt select = new SelectFieldsBolt(topologyConfig, StormUtils.getOutputfields(dimlookup), SelectType.RETAIN, selectFields);
 		builder.setBolt("select", select).localOrShuffleGrouping("dimlookup");
-		
-		IRichBolt logger = new ConsoleLoggerBolt(topologyConfig, StormUtils.getOutputfields(select));
+	
+		IRichBolt logger = new ConsoleLoggerBolt(topologyConfig, StormUtils.getOutputfields(dimlookup));
 		builder.setBolt("consoleLogger", logger).localOrShuffleGrouping("select");
 		
+		IRichBolt writer = new PutHBaseFact2(topologyConfig, StormUtils.getOutputfields(select));
+		builder.setBolt("writer", writer).localOrShuffleGrouping("select");
 		
-		
-		
-		
-//		for (String n : StormUtils.getOutputfields(timebucket, TimeBucketBolt.INTERNATIONAL_STREAM))
-//		System.out.println(n);
-		
-//		IRichBolt hdfsWriter = new SimpleHDFSWriter(topologyConfig, "");
-//		builder.setBolt("hdfsWriter", hdfsWriter).localOrShuffleGrouping("filter");
-		
-		
-		
-		
-//		//add a single routerBolt to the graph to direct the appropriate tuples to their specific output stream
-//		IRichBolt routerBolt = new RouterBolt(topologyConfig, StormUtils.getOutputfields(kafkaSpout));
-//		builder.setBolt("router", routerBolt, 1).localOrShuffleGrouping("spout");
+//		String metaStoreURI = "thrift://sandbox.hortonworks.com:9083";
+//		String dbName = "cdrdwh";
+//		String tableName = "cdr_fact";
+//		
+//		String[] partNames = new String[]{"date_id"};
+//		String[] colNames = new String[]{"geo_id","time_id","cust_id","vend_id","cust_rel_id","vend_rel_id","route","connect","early_event","call_duration_cust","i_pdd","e_pdd","orig_number","term_number"};
+//		DelimitedRecordHiveMapper mapper = new DelimitedRecordHiveMapper()
+//			       .withColumnFields(new Fields(colNames))
+//			       .withPartitionFields(new Fields(partNames));
+//		HiveOptions opts = new HiveOptions(metaStoreURI, dbName, tableName, mapper)
+//				.withTxnsPerBatch(2)
+//				.withBatchSize(100)
+//				.withIdleTimeout(10);
 //		
 //		
-//		//add the positonReport bolt to the graph and link it to the router bolt positionOutputStream partitioning by Xway and Dir
-//		int positionReportParallelism = Integer.parseInt(StormUtils.getExpectedProperty(topologyConfig, "storm.positionReportParallelism"));
-//		IRichBolt positionReportBolt = new PositionReportBolt(topologyConfig);
-//		builder.setBolt("notification", positionReportBolt, positionReportParallelism).fieldsGrouping("router", "positionReportOutputStream", new Fields("XWay", "Dir"));
-//		
-//		//add the HDFS writer to the positionReportBolt
-//		IRichBolt notifyWriter = getHDFSWriter(StormUtils.getExpectedProperty(topologyConfig, "hdfs.fs.notificationsDir"));
-//		builder.setBolt(notifyWriter.toString(), notifyWriter, positionReportParallelism).localOrShuffleGrouping("notification");
-//		
-//		//Will add and link a single QueryProcessingBolt to the routerBolt "queriesOutput" output stream
-//		IRichBolt queryBolt = new QueryProcessingBolt(topologyConfig);
-//		builder.setBolt("query", queryBolt, 1).localOrShuffleGrouping("router", "queriesOutput");
-		
+//		builder.setBolt("hivewriter", new HiveBolt(opts)).localOrShuffleGrouping("select");
 		
 		return builder;
 		

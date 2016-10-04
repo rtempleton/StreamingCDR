@@ -549,7 +549,7 @@
   "type" : "INTEGER",
   "format" : ""
 }, {
-  "name" : "Call_duration_cust",
+  "name" : "call_duration_cust",
   "type" : "FLOAT",
   "format" : "",
   "nullVal" : "0.0"

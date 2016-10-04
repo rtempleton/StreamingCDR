@@ -19,6 +19,8 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 
+import com.github.rtempleton.poncho.StormUtils;
+
 public class DimLookupBolt implements IRichBolt {
 	
 	private static final long serialVersionUID = 1L;
@@ -26,12 +28,15 @@ public class DimLookupBolt implements IRichBolt {
 	private final List<String> inputFields;
 	private OutputCollector collector;
 	
+	private final String JDBCConString;
+	
 	private final Map<Integer, Integer> custCache = new HashMap<Integer, Integer>();
 	private final Map<Integer, Integer> vendCache = new HashMap<Integer, Integer>();
 	private final Map<Integer, Integer> releaseCache = new HashMap<Integer, Integer>();
 	
 	public DimLookupBolt (Properties props, List<String> inputFields){
 		this.inputFields = inputFields;
+		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
 	}
 
 	@Override
@@ -39,7 +44,7 @@ public class DimLookupBolt implements IRichBolt {
 		this.collector = collector;
 		
 		try{
-			Connection con = DriverManager.getConnection("jdbc:phoenix:sandbox.hortonworks.com:2181:/hbase-unsecure");
+			Connection con = DriverManager.getConnection(JDBCConString);
 			
 			String query = "select CUSTOMER_TRUNK_ID, CUST_ID from CDRDWH.CUSTOMER_DIM";
 			PreparedStatement stmt = con.prepareStatement(query);
