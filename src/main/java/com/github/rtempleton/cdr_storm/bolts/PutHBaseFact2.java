@@ -44,6 +44,7 @@ public class PutHBaseFact2 implements IRichBolt {
 		
 		try{
 			Connection con = DriverManager.getConnection(JDBCConString);
+			con.setAutoCommit(false);
 			final String query = "upsert into CDRDWH.CDR_FACT values (?,?,?,?,?)";
 			stmt = con.prepareStatement(query);
 		}catch(Exception e){
@@ -80,6 +81,11 @@ public class PutHBaseFact2 implements IRichBolt {
 
 	void normalUpdate(PreparedStatement stmt) throws Exception {
 		logger.info(stmt.executeUpdate());
+		recordsBatched++;
+		if (recordsBatched % BATCH_SIZE == 0) {
+			con.commit();
+			recordsBatched = 0;
+		}
 	}
 
 	void batchUpdate(PreparedStatement stmt) throws Exception {
@@ -101,14 +107,19 @@ public class PutHBaseFact2 implements IRichBolt {
 				logger.warn("Saw bad update in batch with return value: " + update);
 			}
 		}
+		con.commit();
 		logger.info("Updates added in one batch - " + updatesInBatch);
 	}
 
 	@Override
 	public void cleanup() {
 		try {
-			if (USE_BATCH && recordsBatched > 0) {
-				executeBatchAndWarn(stmt);
+			if (recordsBatched > 0) {
+				if (USE_BATCH) {
+					executeBatchAndWarn(stmt);
+				} else {
+					con.commit();
+				}
 				recordsBatched = 0;
 			}
 			stmt.close();
