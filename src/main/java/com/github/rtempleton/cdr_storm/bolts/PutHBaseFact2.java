@@ -28,10 +28,14 @@ public class PutHBaseFact2 implements IRichBolt {
 	private Connection con;
 	private PreparedStatement stmt;
 	private final String JDBCConString;
+	private final boolean USE_BATCH;
+	private static final int BATCH_SIZE = 100;
+	private long recordsBatched = 0;
 	
 	public PutHBaseFact2(Properties props, List<String> inputFields){
 		this.inputFields = inputFields;
 		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
+		USE_BATCH = true;
 	}
 
 	@Override
@@ -40,6 +44,7 @@ public class PutHBaseFact2 implements IRichBolt {
 		
 		try{
 			Connection con = DriverManager.getConnection(JDBCConString);
+			con.setAutoCommit(false);
 			final String query = "upsert into CDRDWH.CDR_FACT values (?,?,?,?,?)";
 			stmt = con.prepareStatement(query);
 		}catch(Exception e){
@@ -62,7 +67,11 @@ public class PutHBaseFact2 implements IRichBolt {
 			stmt.setByte(4, input.getIntegerByField("time_id").byteValue());
 			stmt.setShort(5, input.getIntegerByField("cust_id").shortValue());
 			
-			logger.info(stmt.executeUpdate());
+			if (USE_BATCH) {
+				batchUpdate(stmt);
+			} else {
+				normalUpdate(stmt);
+			}
 		} catch (Exception e) {
 			logger.error("Execute - " + e.getMessage());
 		}
@@ -70,9 +79,49 @@ public class PutHBaseFact2 implements IRichBolt {
 
 	}
 
+	void normalUpdate(PreparedStatement stmt) throws Exception {
+		logger.info(stmt.executeUpdate());
+		recordsBatched++;
+		if (recordsBatched % BATCH_SIZE == 0) {
+			con.commit();
+			recordsBatched = 0;
+		}
+	}
+
+	void batchUpdate(PreparedStatement stmt) throws Exception {
+		stmt.addBatch();
+		recordsBatched++;
+		if (recordsBatched % BATCH_SIZE == 0) {
+			executeBatchAndWarn(stmt);
+			recordsBatched = 0;
+		}
+	}
+
+	void executeBatchAndWarn(PreparedStatement stmt) throws Exception {
+		int[] updates = stmt.executeBatch();
+		long updatesInBatch = 0l;
+		for (int update : updates) {
+			if (update > 0) {
+				updatesInBatch += update;
+			} else {
+				logger.warn("Saw bad update in batch with return value: " + update);
+			}
+		}
+		con.commit();
+		logger.info("Updates added in one batch - " + updatesInBatch);
+	}
+
 	@Override
 	public void cleanup() {
 		try {
+			if (recordsBatched > 0) {
+				if (USE_BATCH) {
+					executeBatchAndWarn(stmt);
+				} else {
+					con.commit();
+				}
+				recordsBatched = 0;
+			}
 			stmt.close();
 			con.close();
 		} catch (Exception e) {
