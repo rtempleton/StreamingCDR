@@ -48,19 +48,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.phoenix</groupId>
-			<artifactId>phoenix-core</artifactId>
-			<version>4.7.0-HBase-1.1</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>slf4j-log4j12</artifactId>
-					<groupId>org.slf4j</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.storm</groupId>
-			<artifactId>storm-hive</artifactId>
-			<version>1.0.1</version>
+			<artifactId>phoenix-queryserver-client</artifactId>
+			<version>4.8.0-HBase-1.1</version>
 		</dependency>
 	</dependencies>
 

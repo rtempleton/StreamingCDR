@@ -111,10 +111,10 @@ public class TimeBucketBolt implements IRichBolt {
 		return null;
 	}
 	
-	private Integer execute(String key){
+	private int execute(String key){
 		String[] keys = key.split("-");
 		String query = "select DATE_ID from cdrdwh.date_dim where YEAR_VAL = " + keys[0] + " and DAY_OF_YEAR = " + keys[1];
-		Integer i =0;
+		int i =0;
 		try{
 			Connection con = DriverManager.getConnection(JDBCConString);
 			PreparedStatement stmt = con.prepareStatement(query);

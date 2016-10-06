@@ -20,7 +20,7 @@ public class PutHBaseFact2 implements IRichBolt {
 	
 	private static final long serialVersionUID = 1L;
 	private static final Logger logger = Logger.getLogger(PutHBaseFact2.class);
-	private final List<String> inputFields;
+//	private final List<String> inputFields;
 	private OutputCollector collector;
 	
 	private int cntr = Integer.MAX_VALUE;
@@ -33,7 +33,7 @@ public class PutHBaseFact2 implements IRichBolt {
 	private long recordsBatched = 0;
 	
 	public PutHBaseFact2(Properties props, List<String> inputFields){
-		this.inputFields = inputFields;
+//		this.inputFields = inputFields;
 		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
 		USE_BATCH = true;
 	}
@@ -43,17 +43,19 @@ public class PutHBaseFact2 implements IRichBolt {
 		this.collector = collector;
 		
 		try{
-			Connection con = DriverManager.getConnection(JDBCConString);
+			con = DriverManager.getConnection(JDBCConString);
 			con.setAutoCommit(false);
-			final String query = "upsert into CDRDWH.CDR_FACT values (?,?,?,?,?)";
+			final String query = "upsert into CDRDWH.CDR_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 			stmt = con.prepareStatement(query);
 		}catch(Exception e){
 			System.out.println("Prepare - " + e.getMessage());
+			System.exit(-1);
 		}
 			
 
 	}
 
+	Integer x, y;
 	@Override
 	public void execute(Tuple input) {
 		
@@ -66,6 +68,17 @@ public class PutHBaseFact2 implements IRichBolt {
 			stmt.setShort(3, input.getIntegerByField("date_id").shortValue());
 			stmt.setByte(4, input.getIntegerByField("time_id").byteValue());
 			stmt.setShort(5, input.getIntegerByField("cust_id").shortValue());
+			stmt.setShort(6, input.getIntegerByField("vend_id").shortValue());
+			stmt.setShort(7, input.getIntegerByField("cust_rel_id").shortValue());
+			stmt.setShort(8, input.getIntegerByField("vend_rel_id").shortValue());
+			stmt.setByte(9, input.getIntegerByField("route").byteValue());
+			x = input.getBooleanByField("connect").booleanValue()?1:0;
+			stmt.setByte(10, x.byteValue());
+			y = input.getBooleanByField("early_event").booleanValue()?1:0;
+			stmt.setByte(11, y.byteValue());
+			stmt.setDouble(12, input.getFloatByField("call_duration_cust"));
+			stmt.setLong(13, input.getLongByField("i_pdd"));
+			stmt.setLong(14, input.getLongByField("e_pdd"));
 			
 			if (USE_BATCH) {
 				batchUpdate(stmt);
@@ -80,12 +93,8 @@ public class PutHBaseFact2 implements IRichBolt {
 	}
 
 	void normalUpdate(PreparedStatement stmt) throws Exception {
-		logger.info(stmt.executeUpdate());
-		recordsBatched++;
-		if (recordsBatched % BATCH_SIZE == 0) {
-			con.commit();
-			recordsBatched = 0;
-		}
+		stmt.executeUpdate();
+		con.commit();
 	}
 
 	void batchUpdate(PreparedStatement stmt) throws Exception {
@@ -115,12 +124,7 @@ public class PutHBaseFact2 implements IRichBolt {
 	public void cleanup() {
 		try {
 			if (recordsBatched > 0) {
-				if (USE_BATCH) {
-					executeBatchAndWarn(stmt);
-				} else {
-					con.commit();
-				}
-				recordsBatched = 0;
+				executeBatchAndWarn(stmt);
 			}
 			stmt.close();
 			con.close();

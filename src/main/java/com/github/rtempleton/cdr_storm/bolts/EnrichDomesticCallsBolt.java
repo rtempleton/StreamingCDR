@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.storm.task.OutputCollector;
@@ -22,9 +20,6 @@ import org.apache.storm.tuple.Tuple;
 import com.github.rtempleton.operators.trie.LongestSequenceTrie;
 import com.github.rtempleton.operators.trie.Trie;
 import com.github.rtempleton.poncho.StormUtils;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 public class EnrichDomesticCallsBolt implements IRichBolt {
 	

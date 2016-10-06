@@ -33,8 +33,9 @@ public class TestCDRTopology extends AbstractTestCase {
 		
 		cluster.submitTopology("CDRTopology", conf, builder.createTopology());
 	
-		Thread.sleep(60000);
+		Thread.sleep(4*60*1000);
 		
+		cluster.shutdown();
 		cluster.killTopology("CDRTopology");
 		System.out.println("Finsihed!!!");
 	}
