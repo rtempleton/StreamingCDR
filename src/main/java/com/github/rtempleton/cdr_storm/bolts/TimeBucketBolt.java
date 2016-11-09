@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +20,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.github.rtempleton.poncho.StormUtils;
 import com.google.common.cache.CacheBuilder;
@@ -35,6 +37,7 @@ public class TimeBucketBolt implements IRichBolt {
 	public static final String DOMESTIC_STREAM = "domestic";
 	public static final String INTERNATIONAL_STREAM = "international";
 	
+	private final String call_ts = "call_ts";
 	private final String time_id = "time_id";
 	private final String date_id = "date_id";
 	private OutputCollector collector;
@@ -63,9 +66,13 @@ public class TimeBucketBolt implements IRichBolt {
 
 	@Override
 	public void execute(Tuple input) {
-		DateTime ts = new DateTime(input.getValueByField("I_iam_t"));
-		float dur = input.getFloatByField("call_duration_cust");
-		DateTime added = ts.plusSeconds((int)dur);
+//		DateTime ts = new DateTime(input.getValueByField("I_iam_t"));
+//		float dur = input.getFloatByField("call_duration_cust");
+		
+		//Inject the current date into the flow rather than using the date from the CDR
+		
+//		DateTime added = ts.plusSeconds((int)dur);
+		DateTime added = DateTime.now(DateTimeZone.forID("America/Chicago"));
 		int time_id = (added.getHourOfDay()*3600 + added.getMinuteOfHour()*60 + added.getSecondOfMinute())/900;
 		String key = added.getYear() + "-" + added.getDayOfYear();
 		int date_id = 0;
@@ -76,10 +83,8 @@ public class TimeBucketBolt implements IRichBolt {
 			date_id = 0;
 		}
 		List<Object> vals = input.getValues();
+		vals.add(added.getMillis());
 		vals.add(time_id);
-		
-		//STORM-2062 - If using Hive streaming you must make this value a String in order to suppoort Hive parititons
-		//vals.add(Integer.toString(date_id));
 		vals.add(date_id);
 		//direct Addr_Nature == 3 calls to domestic output stream, otherwise send them out on the international output stream
 		if(input.getStringByField("Addr_Nature").equals("3"))
@@ -99,6 +104,7 @@ public class TimeBucketBolt implements IRichBolt {
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		//append the field names that will be added by this bolt
 		final ArrayList<String> outputFields = new ArrayList<String>(this.inputFields);
+		outputFields.add(call_ts);
 		outputFields.add(time_id);
 		outputFields.add(date_id);
 		declarer.declareStream("domestic", new Fields(outputFields));

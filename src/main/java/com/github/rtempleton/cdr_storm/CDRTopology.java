@@ -19,12 +19,11 @@ import com.github.rtempleton.cdr_storm.bolts.DimLookupBolt;
 import com.github.rtempleton.cdr_storm.bolts.EnrichDomesticCallsBolt;
 import com.github.rtempleton.cdr_storm.bolts.EnrichInternationalCallsBolt;
 import com.github.rtempleton.cdr_storm.bolts.PDDandEarlyEvents;
-import com.github.rtempleton.cdr_storm.bolts.PutHBaseFact2;
+import com.github.rtempleton.cdr_storm.bolts.PutHBaseFact3;
 import com.github.rtempleton.cdr_storm.bolts.TimeBucketBolt;
 import com.github.rtempleton.poncho.SelectFieldsBolt;
 import com.github.rtempleton.poncho.SelectFieldsBolt.SelectType;
 import com.github.rtempleton.poncho.StormUtils;
-import com.github.rtempleton.poncho.io.ConsoleLoggerBolt;
 import com.github.rtempleton.poncho.io.ParseDelimitedTextBolt;
 
 
@@ -60,10 +59,10 @@ public class CDRTopology{
 		TopologyBuilder builder = new TopologyBuilder();
 		
 		IRichSpout kafkaSpout = StormUtils.getKafkaSpout(topologyConfig, new RawScheme());
-		builder.setSpout("spout", kafkaSpout, 1);
+		builder.setSpout("spout", kafkaSpout, 2);
 		
 		IRichBolt reader = new ParseDelimitedTextBolt(topologyConfig);
-		builder.setBolt("reader", reader).localOrShuffleGrouping("spout");
+		builder.setBolt("reader", reader, 2).localOrShuffleGrouping("spout");
 		
 		IRichBolt callStat = new CallStatOrigTermBolt(topologyConfig, StormUtils.getOutputfields(reader));
 		builder.setBolt("callStat", callStat).localOrShuffleGrouping("reader");
@@ -85,32 +84,20 @@ public class CDRTopology{
 		builder.setBolt("dimlookup", dimlookup).localOrShuffleGrouping("pdd");
 		
 		//list the fields we want to keep in the order we want them output.
-		List<String> selectFields = Arrays.asList(new String[]{"geo_id","date_id","time_id","cust_id","vend_id","cust_rel_id","vend_rel_id","route","connect","early_event","call_duration_cust","i_pdd","e_pdd","orig_number","term_number"});
-		IRichBolt select = new SelectFieldsBolt(topologyConfig, StormUtils.getOutputfields(dimlookup), SelectType.RETAIN, selectFields);
+//		List<String> fact2Select = Arrays.asList(new String[]{"geo_id","date_id","time_id","cust_id","vend_id","cust_rel_id","vend_rel_id","route","connect","early_event","call_duration_cust","i_pdd","e_pdd","orig_number","term_number"});
+		List<String> fact3Select = Arrays.asList(new String[]{"call_ts", "geo_id", "cust_id","vend_id","cust_rel_id","vend_rel_id","route","connect","early_event","call_duration_cust","i_pdd","e_pdd","orig_number","term_number"});
+		
+		IRichBolt select = new SelectFieldsBolt(topologyConfig, StormUtils.getOutputfields(dimlookup), SelectType.RETAIN, fact3Select);
 		builder.setBolt("select", select).localOrShuffleGrouping("dimlookup");
 	
-		IRichBolt logger = new ConsoleLoggerBolt(topologyConfig, StormUtils.getOutputfields(dimlookup));
-		builder.setBolt("consoleLogger", logger).localOrShuffleGrouping("select");
+//		IRichBolt logger = new ConsoleLoggerBolt(topologyConfig, StormUtils.getOutputfields(select));
+//		builder.setBolt("consoleLogger", logger).localOrShuffleGrouping("select");
 		
-		IRichBolt writer = new PutHBaseFact2(topologyConfig, StormUtils.getOutputfields(select));
+//		IRichBolt writer = new PutHBaseFact2(topologyConfig, StormUtils.getOutputfields(select));
+//		builder.setBolt("writer", writer).localOrShuffleGrouping("select");
+		
+		IRichBolt writer = new PutHBaseFact3(topologyConfig, StormUtils.getOutputfields(select));
 		builder.setBolt("writer", writer).localOrShuffleGrouping("select");
-		
-//		String metaStoreURI = "thrift://sandbox.hortonworks.com:9083";
-//		String dbName = "cdrdwh";
-//		String tableName = "cdr_fact";
-//		
-//		String[] partNames = new String[]{"date_id"};
-//		String[] colNames = new String[]{"geo_id","time_id","cust_id","vend_id","cust_rel_id","vend_rel_id","route","connect","early_event","call_duration_cust","i_pdd","e_pdd","orig_number","term_number"};
-//		DelimitedRecordHiveMapper mapper = new DelimitedRecordHiveMapper()
-//			       .withColumnFields(new Fields(colNames))
-//			       .withPartitionFields(new Fields(partNames));
-//		HiveOptions opts = new HiveOptions(metaStoreURI, dbName, tableName, mapper)
-//				.withTxnsPerBatch(2)
-//				.withBatchSize(100)
-//				.withIdleTimeout(10);
-//		
-//		
-//		builder.setBolt("hivewriter", new HiveBolt(opts)).localOrShuffleGrouping("select");
 		
 		return builder;
 		

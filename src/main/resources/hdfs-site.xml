@@ -63,7 +63,7 @@
     
     <property>
       <name>dfs.datanode.du.reserved</name>
-      <value>1073741824</value>
+      <value>5366581248</value>
     </property>
     
     <property>
@@ -89,12 +89,7 @@
     
     <property>
       <name>dfs.datanode.max.transfer.threads</name>
-      <value>1024</value>
-    </property>
-    
-    <property>
-      <name>dfs.datanode.use.datanode.hostname</name>
-      <value>true</value>
+      <value>16384</value>
     </property>
     
     <property>
@@ -105,11 +100,6 @@
     <property>
       <name>dfs.encrypt.data.transfer.cipher.suites</name>
       <value>AES/CTR/NoPadding</value>
-    </property>
-    
-    <property>
-      <name>dfs.encryption.key.provider.uri</name>
-      <value></value>
     </property>
     
     <property>
@@ -199,18 +189,13 @@
     
     <property>
       <name>dfs.namenode.http-address</name>
-      <value>sandbox.hortonworks.com:50070</value>
+      <value>rtempleton-1.field.hortonworks.com:50070</value>
       <final>true</final>
     </property>
     
     <property>
       <name>dfs.namenode.https-address</name>
-      <value>sandbox.hortonworks.com:50470</value>
-    </property>
-    
-    <property>
-      <name>dfs.namenode.inode.attributes.provider.class</name>
-      <value>org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer</value>
+      <value>rtempleton-1.field.hortonworks.com:50470</value>
     </property>
     
     <property>
@@ -226,17 +211,17 @@
     
     <property>
       <name>dfs.namenode.rpc-address</name>
-      <value>sandbox.hortonworks.com:8020</value>
+      <value>rtempleton-1.field.hortonworks.com:8020</value>
     </property>
     
     <property>
       <name>dfs.namenode.safemode.threshold-pct</name>
-      <value>0.999</value>
+      <value>1</value>
     </property>
     
     <property>
       <name>dfs.namenode.secondary.http-address</name>
-      <value>sandbox.hortonworks.com:50090</value>
+      <value>rtempleton-2.field.hortonworks.com:50090</value>
     </property>
     
     <property>
@@ -266,7 +251,7 @@
     
     <property>
       <name>dfs.replication</name>
-      <value>1</value>
+      <value>3</value>
     </property>
     
     <property>
