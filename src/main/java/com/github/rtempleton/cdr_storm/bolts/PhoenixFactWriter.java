@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
@@ -21,10 +22,10 @@ import org.apache.storm.tuple.Tuple;
 
 import com.github.rtempleton.poncho.StormUtils;
 
-public class PutHBaseFact3 implements IRichBolt {
+public class PhoenixFactWriter implements IRichBolt {
 	
 	private static final long serialVersionUID = 1L;
-	private static final Logger logger = Logger.getLogger(PutHBaseFact3.class);
+	private static final Logger logger = Logger.getLogger(PhoenixFactWriter.class);
 	private OutputCollector collector;
 	
 	private long cntr = Long.MAX_VALUE;
@@ -37,7 +38,7 @@ public class PutHBaseFact3 implements IRichBolt {
 	private long recordsBatched = 0;
 	private final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
 	
-	public PutHBaseFact3(Properties props, List<String> inputFields){
+	public PhoenixFactWriter(Properties props, List<String> inputFields){
 		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
 		USE_BATCH = true;
 	}
@@ -45,25 +46,38 @@ public class PutHBaseFact3 implements IRichBolt {
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
+		initCon();
+	}
+	
+	private boolean testCon(){
+		try{
+			PreparedStatement foo = con.prepareStatement("select -1");
+			ResultSet rset = foo.executeQuery();
+			return rset.next();
+		}catch(Exception e){
+			return false;
+		}
 		
+	}
+	
+	private void initCon(){
 		try{
 			con = DriverManager.getConnection(JDBCConString);
 			con.setAutoCommit(false);
-			stmt = con.prepareStatement("select min(id) from cdrdwh.cdr_fact2");
-			ResultSet rset = stmt.executeQuery();
+			PreparedStatement foo = con.prepareStatement("select min(id) from cdrdwh.cdr_fact");
+			ResultSet rset = foo.executeQuery();
 			rset.next();
 			if(rset.getLong(1)!=0 & rset.getLong(1)<cntr)
 				cntr=rset.getLong(1)-1;
-			stmt.clearParameters();
+			rset.close();
 			
-			final String query = "upsert into CDRDWH.CDR_FACT2 values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
-			stmt = con.prepareStatement(query);
+			if(stmt == null)
+				stmt = con.prepareStatement("upsert into CDRDWH.CDR_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		}catch(Exception e){
-			System.out.println("Prepare - " + e.getMessage());
+			System.out.println("initCon - " + e.getMessage());
 			System.exit(-1);
 		}
-			
-
+		
 	}
 
 	Integer x, y;
@@ -117,13 +131,22 @@ public class PutHBaseFact3 implements IRichBolt {
 	}
 
 	void executeBatchAndWarn(PreparedStatement stmt) throws Exception {
+		
+		//check the validity of the connection - this could timeout when no data has arrived at this bolt for an extended period of time.
+		if(!testCon()){
+			logger.info("Conn was found to be closed. Re-initing conn");
+			con = DriverManager.getConnection(JDBCConString);
+		}
+		
 		int[] updates = stmt.executeBatch();
 		long updatesInBatch = 0l;
 		for (int update : updates) {
 			if (update > 0) {
 				updatesInBatch += update;
-			} else {
-				logger.warn("Saw bad update in batch with return value: " + update);
+			} else if (update == PreparedStatement.EXECUTE_FAILED){
+				logger.info("Saw bad update in batch with return value: " + update);
+			} else if (update == PreparedStatement.SUCCESS_NO_INFO){
+				logger.info("Phoenix update succeeded but no INFO");
 			}
 		}
 		con.commit();
