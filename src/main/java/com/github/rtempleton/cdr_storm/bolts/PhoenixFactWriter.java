@@ -1,12 +1,12 @@
 package com.github.rtempleton.cdr_storm.bolts;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +14,15 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
+import org.apache.storm.Config;
+import org.apache.storm.Constants;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichBolt;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Tuple;
 
+import com.esotericsoftware.minlog.Log;
 import com.github.rtempleton.poncho.StormUtils;
 
 public class PhoenixFactWriter implements IRichBolt {
@@ -28,65 +31,80 @@ public class PhoenixFactWriter implements IRichBolt {
 	private static final Logger logger = Logger.getLogger(PhoenixFactWriter.class);
 	private OutputCollector collector;
 	
-	private long cntr = Long.MAX_VALUE;
-	
-	private Connection con;
-	private PreparedStatement stmt;
 	private final String JDBCConString;
-	private final boolean USE_BATCH;
-	private static final int BATCH_SIZE = 100;
-	private long recordsBatched = 0;
-	private final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+	
+	private static final int TICK_TUPLE_SECS = 300;
+	private static final int BATCH_SIZE = 300;
+	private static final ArrayList<Tuple> cache = new ArrayList<>(BATCH_SIZE);
+	private static final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+	private long timeMarker = 0l;
+	
+	
 	
 	public PhoenixFactWriter(Properties props, List<String> inputFields){
 		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
-		USE_BATCH = true;
 	}
 
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
-		initCon();
 	}
 	
-	private boolean testCon(){
-		try{
-			PreparedStatement foo = con.prepareStatement("select -1");
-			ResultSet rset = foo.executeQuery();
-			return rset.next();
-		}catch(Exception e){
-			return false;
-		}
-		
-	}
-	
-	private void initCon(){
-		try{
-			con = DriverManager.getConnection(JDBCConString);
-			con.setAutoCommit(false);
-			PreparedStatement foo = con.prepareStatement("select min(id) from cdrdwh.cdr_fact");
-			ResultSet rset = foo.executeQuery();
-			rset.next();
-			if(rset.getLong(1)!=0 & rset.getLong(1)<cntr)
-				cntr=rset.getLong(1)-1;
-			rset.close();
-			
-			if(stmt == null)
-				stmt = con.prepareStatement("upsert into CDRDWH.CDR_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
-		}catch(Exception e){
-			System.out.println("initCon - " + e.getMessage());
-			System.exit(-1);
-		}
-		
-	}
 
-	Integer x, y;
 	@Override
 	public void execute(Tuple input) {
 		
-//		call_ts, geo_id, cust_id, vend_id, cust_rel_id, vend_rel_id, route, connect, early_event, call_duration_cust, i_pdd, e_pdd, orig_number, term_number
 		
-		try {
+		//if a tick comes through and there's records in the cache and no new records have arrived in the last 30 seconds, flush the cache
+		if (isTickTuple(input)){
+			if(cache.size()>0){
+				if(cal.getTimeInMillis() - timeMarker > 30000){
+					logger.info(cache.size() + " items in the cache older than 300 secs. Flushing");
+					flushCache();
+					timeMarker = cal.getTimeInMillis();
+				}
+			}
+		}else{
+			cache.add(input);
+			timeMarker = cal.getTimeInMillis();
+			if(cache.size()==BATCH_SIZE){
+				flushCache();
+			}
+		}
+			
+		collector.ack(input);
+
+	}
+	
+	private static boolean isTickTuple(Tuple tuple) {
+	    return tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
+	        && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID);
+	}
+	
+	
+	private void flushCache(){
+		
+		Integer x,y;
+		Connection con = null;
+		PreparedStatement stmt = null;
+		long cntr = Long.MAX_VALUE;
+		
+		try{
+		con = DriverManager.getConnection(JDBCConString);
+		con.setAutoCommit(false);
+		//add a unique (decrementing) long id to each record
+		stmt = con.prepareStatement("select min(id) from cdrdwh.cdr_fact");
+		ResultSet rset = stmt.executeQuery();
+		rset.next();
+		if(rset.getLong(1)!=0)
+			cntr=rset.getLong(1)-1;
+		rset.close();
+		stmt.close();
+		
+		stmt = con.prepareStatement("upsert into CDRDWH.CDR_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+		
+//		call_ts, geo_id, cust_id, vend_id, cust_rel_id, vend_rel_id, route, connect, early_event, call_duration_cust, i_pdd, e_pdd, orig_number, term_number		
+		for (Tuple input : cache){
 			stmt.clearParameters();
 			stmt.setLong(1, cntr--); //ID
 			stmt.setTimestamp(2, new Timestamp(input.getLongByField("call_ts")), cal);
@@ -104,66 +122,41 @@ public class PhoenixFactWriter implements IRichBolt {
 			stmt.setLong(12, input.getLongByField("i_pdd"));
 			stmt.setLong(13, input.getLongByField("e_pdd"));
 			
-			if (USE_BATCH) {
-				batchUpdate(stmt);
-			} else {
-				normalUpdate(stmt);
-			}
-		} catch (Exception e) {
-			logger.error("Execute - " + e.getMessage());
-		}
-		collector.ack(input);
-
-	}
-
-	void normalUpdate(PreparedStatement stmt) throws Exception {
-		stmt.executeUpdate();
-		con.commit();
-	}
-
-	void batchUpdate(PreparedStatement stmt) throws Exception {
-		stmt.addBatch();
-		recordsBatched++;
-		if (recordsBatched % BATCH_SIZE == 0) {
-			executeBatchAndWarn(stmt);
-			recordsBatched = 0;
-		}
-	}
-
-	void executeBatchAndWarn(PreparedStatement stmt) throws Exception {
-		
-		//check the validity of the connection - this could timeout when no data has arrived at this bolt for an extended period of time.
-		if(!testCon()){
-			logger.info("Conn was found to be closed. Re-initing conn");
-			con = DriverManager.getConnection(JDBCConString);
+			stmt.addBatch();
 		}
 		
+		//execute the batch of inserts and clear the cache
 		int[] updates = stmt.executeBatch();
-		long updatesInBatch = 0l;
-		for (int update : updates) {
-			if (update > 0) {
-				updatesInBatch += update;
-			} else if (update == PreparedStatement.EXECUTE_FAILED){
-				logger.info("Saw bad update in batch with return value: " + update);
-			} else if (update == PreparedStatement.SUCCESS_NO_INFO){
-				logger.info("Phoenix update succeeded but no INFO");
-			}
-		}
+		cache.clear();
+		logger.info("Total responses from executeBatch command: " + updates.length);
 		con.commit();
-		logger.info("Updates added in one batch - " + updatesInBatch);
+		stmt.close();
+		con.close();
+		}catch (SQLException e){
+			logger.error(e.getStackTrace().toString());
+		}finally{
+			if(cache.size()>0){
+				Log.error(cache.size() + " records in the cache failed to insert");
+				cache.clear();
+			}
+			if(stmt!=null)
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+				}
+			if(con!=null)
+				try {
+					con.close();
+				} catch (SQLException e) {
+				}
+		}
+		
 	}
+
 
 	@Override
 	public void cleanup() {
-		try {
-			if (recordsBatched > 0) {
-				executeBatchAndWarn(stmt);
-			}
-			stmt.close();
-			con.close();
-		} catch (Exception e) {
-			logger.info(e.getMessage());
-		}
+
 	}
 
 	@Override
@@ -173,8 +166,10 @@ public class PhoenixFactWriter implements IRichBolt {
 
 	@Override
 	public Map<String, Object> getComponentConfiguration() {
-		// TODO Auto-generated method stub
-		return null;
+		// configure how often a tick tuple will be sent to our bolt
+	    Config conf = new Config();
+	    conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, TICK_TUPLE_SECS);
+	    return conf;
 	}
 
 }
