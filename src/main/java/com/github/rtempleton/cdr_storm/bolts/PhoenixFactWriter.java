@@ -33,18 +33,19 @@ public class PhoenixFactWriter implements IRichBolt {
 	
 	private final String JDBCConString;
 	
-	private static final int TICK_TUPLE_SECS = 300;
-	private static final int BATCH_SIZE = 300;
-	private static final ArrayList<Tuple> cache = new ArrayList<>(BATCH_SIZE);
+	private final long TICK_TUPLE_SECS;
+	private final int BATCH_SIZE;
+	private final ArrayList<Tuple> cache;
 	private static final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
-	private long timeMarker = 0l;
-	
-	
-	
+
 	public PhoenixFactWriter(Properties props, List<String> inputFields){
 		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
+		TICK_TUPLE_SECS = (props.getProperty("writerFlushFreqSecs")!=null)?Long.parseLong(props.getProperty("writerFlushFreqSecs")):60l;
+		BATCH_SIZE = (props.getProperty("FlushBatchSize")!=null)?Integer.parseInt(props.getProperty("FlushBatchSize")):300;
+		cache = new ArrayList<>(BATCH_SIZE);
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
@@ -54,26 +55,17 @@ public class PhoenixFactWriter implements IRichBolt {
 	@Override
 	public void execute(Tuple input) {
 		
-		
-		//if a tick comes through and there's records in the cache and no new records have arrived in the last 30 seconds, flush the cache
 		if (isTickTuple(input)){
-			if(cache.size()>0){
-				if(cal.getTimeInMillis() - timeMarker > 30000){
-					logger.info(cache.size() + " items in the cache older than 300 secs. Flushing");
-					flushCache();
-					timeMarker = cal.getTimeInMillis();
-				}
-			}
+			if (!cache.isEmpty())
+				flushCache();
 		}else{
 			cache.add(input);
-			timeMarker = cal.getTimeInMillis();
 			if(cache.size()==BATCH_SIZE){
 				flushCache();
 			}
 		}
 			
 		collector.ack(input);
-
 	}
 	
 	private static boolean isTickTuple(Tuple tuple) {
