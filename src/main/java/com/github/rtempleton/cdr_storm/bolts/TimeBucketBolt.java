@@ -1,16 +1,9 @@
 package com.github.rtempleton.cdr_storm.bolts;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TimeZone;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.storm.task.OutputCollector;
@@ -21,11 +14,6 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import com.github.rtempleton.poncho.StormUtils;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 public class TimeBucketBolt implements IRichBolt {
 	
@@ -119,7 +107,7 @@ public class TimeBucketBolt implements IRichBolt {
 	
 //	private int execute(String key){
 //		String[] keys = key.split("-");
-//		String query = "select DATE_ID from cdrdwh.date_dim where YEAR_VAL = " + keys[0] + " and DAY_OF_YEAR = " + keys[1];
+//		String query = "select DATE_ID from date_dim where YEAR_VAL = " + keys[0] + " and DAY_OF_YEAR = " + keys[1];
 //		int i =0;
 //		try{
 //			Connection con = DriverManager.getConnection(JDBCConString);

@@ -85,7 +85,7 @@ public class PhoenixFactWriter implements IRichBolt {
 		con = DriverManager.getConnection(JDBCConString);
 		con.setAutoCommit(false);
 		//add a unique (decrementing) long id to each record
-		stmt = con.prepareStatement("select min(id) from cdrdwh.cdr_fact");
+		stmt = con.prepareStatement("select min(id) from cdr_fact");
 		ResultSet rset = stmt.executeQuery();
 		rset.next();
 		if(rset.getLong(1)!=0)
@@ -93,7 +93,7 @@ public class PhoenixFactWriter implements IRichBolt {
 		rset.close();
 		stmt.close();
 		
-		stmt = con.prepareStatement("upsert into CDRDWH.CDR_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+		stmt = con.prepareStatement("upsert into CDR_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		
 //		call_ts, geo_id, cust_id, vend_id, cust_rel_id, vend_rel_id, route, connect, early_event, call_duration_cust, i_pdd, e_pdd, orig_number, term_number		
 		for (Tuple input : cache){

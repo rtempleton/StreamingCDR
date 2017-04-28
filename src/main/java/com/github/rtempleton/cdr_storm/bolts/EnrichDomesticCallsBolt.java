@@ -42,7 +42,7 @@ public class EnrichDomesticCallsBolt implements IRichBolt {
 		this.collector = collector;
 		
 		//populate the Trie with the geogrpahy info from the dim table
-		final String query = "select npanxx, geo_id from cdrdwh.geography_dim where dial_code = '1'";
+		final String query = "select npanxx, geo_id from geography_dim where dial_code = '1'";
 		try{
 			Connection con = DriverManager.getConnection(JDBCConString);
 			PreparedStatement stmt = con.prepareStatement(query);

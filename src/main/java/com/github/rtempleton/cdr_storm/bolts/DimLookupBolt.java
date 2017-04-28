@@ -6,7 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -46,7 +45,7 @@ public class DimLookupBolt implements IRichBolt {
 		try{
 			Connection con = DriverManager.getConnection(JDBCConString);
 			
-			String query = "select CUSTOMER_TRUNK_ID, CUST_ID from CDRDWH.CUSTOMER_DIM";
+			String query = "select CUSTOMER_TRUNK_ID, CUST_ID from CUSTOMER_DIM";
 			PreparedStatement stmt = con.prepareStatement(query);
 			ResultSet rset = stmt.executeQuery();
 			while (rset.next()){
@@ -54,7 +53,7 @@ public class DimLookupBolt implements IRichBolt {
 			}
 			stmt.close();
 			
-			query = "select VENDOR_TRUNK_ID, VEND_ID from CDRDWH.VENDOR_DIM";
+			query = "select VENDOR_TRUNK_ID, VEND_ID from VENDOR_DIM";
 			stmt = con.prepareStatement(query);
 			rset = stmt.executeQuery();
 			while (rset.next()){
@@ -62,7 +61,7 @@ public class DimLookupBolt implements IRichBolt {
 			}
 			stmt.close();
 			
-			query = "select RELEASE_CODE_NUMBER, REL_CODE_ID from CDRDWH.RELEASE_CODE_DIM";
+			query = "select RELEASE_CODE_NUMBER, REL_CODE_ID from RELEASE_CODE_DIM";
 			stmt = con.prepareStatement(query);
 			rset = stmt.executeQuery();
 			while (rset.next()){
