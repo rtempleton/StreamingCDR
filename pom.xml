@@ -6,43 +6,23 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<description>Storm implementation of a CDR procressing solution</description>
 	<properties>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
-		<StormVersion>1.0.1</StormVersion>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<StormVersion>1.1.0.3.0.0.0-453</StormVersion>
 	</properties>
+	<repositories>
+		<repository>
+			<id>hortonworks</id>
+			<name>hortonworks repo</name>
+			<url>http://nexus-private.hortonworks.com/nexus/content/groups/public</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.storm</groupId>
-			<artifactId>storm-core</artifactId>
-			<version>${StormVersion}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.storm</groupId>
-			<artifactId>storm-kafka</artifactId>
-			<version>${StormVersion}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.storm</groupId>
-			<artifactId>storm-hdfs</artifactId>
-			<version>${StormVersion}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.kafka</groupId>
-			<artifactId>kafka_2.11</artifactId>
-			<version>0.9.0.1</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>slf4j-log4j12</artifactId>
-					<groupId>org.slf4j</groupId>
-				</exclusion>
-			</exclusions>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.github.rtempleton</groupId>
@@ -52,7 +32,19 @@
 		<dependency>
 			<groupId>org.apache.phoenix</groupId>
 			<artifactId>phoenix-queryserver-client</artifactId>
-			<version>4.8.0-HBase-1.1</version>
+			<version>4.7.0.2.6.1.0-129</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.storm</groupId>
+			<artifactId>storm-core</artifactId>
+			<version>1.1.0</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -115,4 +107,5 @@
 			</resource>
 		</resources>
 	</build>
+
 </project>

@@ -59,10 +59,10 @@ public class CDRTopology{
 		TopologyBuilder builder = new TopologyBuilder();
 		
 		IRichSpout kafkaSpout = StormUtils.getKafkaSpout(topologyConfig, new RawScheme());
-		builder.setSpout("spout", kafkaSpout, 2);
+		builder.setSpout("spout", kafkaSpout, 3);
 		
 		IRichBolt reader = new ParseDelimitedTextBolt(topologyConfig);
-		builder.setBolt("reader", reader, 2).localOrShuffleGrouping("spout");
+		builder.setBolt("reader", reader, 3).localOrShuffleGrouping("spout");
 		
 		IRichBolt callStat = new CallStatOrigTermBolt(topologyConfig, StormUtils.getOutputfields(reader));
 		builder.setBolt("callStat", callStat).localOrShuffleGrouping("reader");
@@ -70,6 +70,11 @@ public class CDRTopology{
 		//The timebucket bolt has two output streams: Domestic Calls and International calls
 		IRichBolt timebucket = new TimeBucketBolt(topologyConfig, StormUtils.getOutputfields(callStat));
 		builder.setBolt("timebucket", timebucket).localOrShuffleGrouping("callStat");
+		
+		
+//		IRichBolt logger = new ConsoleLoggerBolt(topologyConfig, StormUtils.getOutputfields(timebucket, TimeBucketBolt.DOMESTIC_STREAM));
+//		builder.setBolt("consoleLogger", logger).localOrShuffleGrouping("timebucket", TimeBucketBolt.DOMESTIC_STREAM);
+		
 		
 		IRichBolt intlBolt = new EnrichInternationalCallsBolt(topologyConfig, StormUtils.getOutputfields(timebucket, TimeBucketBolt.INTERNATIONAL_STREAM));
 		builder.setBolt("intlBolt", intlBolt).localOrShuffleGrouping("timebucket", TimeBucketBolt.INTERNATIONAL_STREAM);
@@ -89,19 +94,16 @@ public class CDRTopology{
 		IRichBolt select = new SelectFieldsBolt(topologyConfig, StormUtils.getOutputfields(dimlookup), SelectType.RETAIN, cdr_fact);
 		builder.setBolt("select", select).localOrShuffleGrouping("dimlookup");
 	
-//		IRichBolt logger = new ConsoleLoggerBolt(topologyConfig, StormUtils.getOutputfields(select));
-//		builder.setBolt("consoleLogger", logger).localOrShuffleGrouping("select");
+
 		
 		IRichBolt writer = new PhoenixFactWriter(topologyConfig, StormUtils.getOutputfields(select));
-		builder.setBolt("writer", writer).localOrShuffleGrouping("select");
+		builder.setBolt("writer", writer, 1).localOrShuffleGrouping("select");
 		
 		return builder;
 		
 	}
 
 	protected void submit(TopologyBuilder builder){
-//		conf.registerSerialization(PositionReportOp.TollNotification.class);
-//		conf.setDebug(true);
 
 		try {
 			StormSubmitter.submitTopology(thisName, topologyConfig, builder.createTopology());

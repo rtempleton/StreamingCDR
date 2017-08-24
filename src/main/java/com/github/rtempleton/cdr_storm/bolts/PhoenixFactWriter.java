@@ -24,6 +24,7 @@ import org.apache.storm.tuple.Tuple;
 
 import com.esotericsoftware.minlog.Log;
 import com.github.rtempleton.poncho.StormUtils;
+import com.google.common.base.Stopwatch;
 
 public class PhoenixFactWriter implements IRichBolt {
 	
@@ -37,12 +38,14 @@ public class PhoenixFactWriter implements IRichBolt {
 	private final int BATCH_SIZE;
 	private final ArrayList<Tuple> cache;
 	private static final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+	
+	private long cntr = Long.MAX_VALUE;
 
 	public PhoenixFactWriter(Properties props, List<String> inputFields){
 		JDBCConString = StormUtils.getRequiredProperty(props, "JDBCConString");
 		TICK_TUPLE_SECS = (props.getProperty("writerFlushFreqSecs")!=null)?Long.parseLong(props.getProperty("writerFlushFreqSecs")):60l;
 		BATCH_SIZE = (props.getProperty("FlushBatchSize")!=null)?Integer.parseInt(props.getProperty("FlushBatchSize")):300;
-		cache = new ArrayList<>(BATCH_SIZE);
+		cache = new ArrayList<Tuple>(BATCH_SIZE);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -75,23 +78,25 @@ public class PhoenixFactWriter implements IRichBolt {
 	
 	
 	private void flushCache(){
-		
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		   
 		Integer x,y;
 		Connection con = null;
 		PreparedStatement stmt = null;
-		long cntr = Long.MAX_VALUE;
 		
 		try{
 		con = DriverManager.getConnection(JDBCConString);
 		con.setAutoCommit(false);
 		//add a unique (decrementing) long id to each record
-		stmt = con.prepareStatement("select min(id) from cdr_fact");
-		ResultSet rset = stmt.executeQuery();
-		rset.next();
-		if(rset.getLong(1)!=0)
-			cntr=rset.getLong(1)-1;
-		rset.close();
-		stmt.close();
+		if(cntr==Long.MAX_VALUE) {
+			stmt = con.prepareStatement("select min(id) from cdr_fact");
+			ResultSet rset = stmt.executeQuery();
+			rset.next();
+			if(rset.getLong(1)!=0L)
+				cntr=rset.getLong(1)-1;
+			rset.close();
+			stmt.close();
+		}
 		
 		stmt = con.prepareStatement("upsert into CDR_FACT values (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 		
@@ -143,6 +148,8 @@ public class PhoenixFactWriter implements IRichBolt {
 				}
 		}
 		
+		stopwatch.stop();
+		logger.info("...took " + stopwatch.toString());
 	}
 
 
