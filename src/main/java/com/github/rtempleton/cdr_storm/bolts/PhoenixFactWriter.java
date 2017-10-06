@@ -22,7 +22,6 @@ import org.apache.storm.topology.IRichBolt;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Tuple;
 
-import com.esotericsoftware.minlog.Log;
 import com.github.rtempleton.poncho.StormUtils;
 import com.google.common.base.Stopwatch;
 
@@ -78,7 +77,8 @@ public class PhoenixFactWriter implements IRichBolt {
 	
 	
 	private void flushCache(){
-		Stopwatch stopwatch = Stopwatch.createStarted();
+		Stopwatch stopwatch = new Stopwatch();
+		stopwatch.start();
 		   
 		Integer x,y;
 		Connection con = null;
@@ -133,7 +133,7 @@ public class PhoenixFactWriter implements IRichBolt {
 			logger.error(e.getStackTrace().toString());
 		}finally{
 			if(cache.size()>0){
-				Log.error(cache.size() + " records in the cache failed to insert");
+				logger.error(cache.size() + " records in the cache failed to insert");
 				cache.clear();
 			}
 			if(stmt!=null)

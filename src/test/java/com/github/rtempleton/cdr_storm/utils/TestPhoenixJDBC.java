@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.github.rtempleton.cdr_storm.AbstractTestCase;
+import com.github.rtempleton.poncho.test.AbstractTestCase;
 
 public class TestPhoenixJDBC extends AbstractTestCase {
 	

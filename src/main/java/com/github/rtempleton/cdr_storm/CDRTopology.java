@@ -9,6 +9,10 @@ import org.apache.storm.StormSubmitter;
 import org.apache.storm.generated.AlreadyAliveException;
 import org.apache.storm.generated.AuthorizationException;
 import org.apache.storm.generated.InvalidTopologyException;
+import org.apache.storm.kafka.spout.KafkaSpout;
+import org.apache.storm.kafka.spout.KafkaSpoutConfig;
+import org.apache.storm.kafka.spout.KafkaSpoutRetryExponentialBackoff;
+import org.apache.storm.kafka.spout.KafkaSpoutConfig.FirstPollOffsetStrategy;
 import org.apache.storm.spout.RawScheme;
 import org.apache.storm.topology.IRichBolt;
 import org.apache.storm.topology.IRichSpout;
@@ -58,45 +62,73 @@ public class CDRTopology{
 		
 		TopologyBuilder builder = new TopologyBuilder();
 		
-		IRichSpout kafkaSpout = StormUtils.getKafkaSpout(topologyConfig, new RawScheme());
-		builder.setSpout("spout", kafkaSpout, 3);
+		String spoutParallelism = topologyConfig.getProperty("spout.parallelism", "1");
+		int parallelismHint = Integer.parseInt(spoutParallelism);
 		
-		IRichBolt reader = new ParseDelimitedTextBolt(topologyConfig);
-		builder.setBolt("reader", reader, 3).localOrShuffleGrouping("spout");
+		final String bootStrapServers = StormUtils.getRequiredProperty(topologyConfig, "kafka.bootStrapServers");
+		final String topic = StormUtils.getRequiredProperty(topologyConfig, "kafka.topic");
+		final String consumerGroupId = StormUtils.getRequiredProperty(topologyConfig, "kafka.consumerGroupId");
 		
-		IRichBolt callStat = new CallStatOrigTermBolt(topologyConfig, StormUtils.getOutputfields(reader));
+		
+		@SuppressWarnings("rawtypes")
+		KafkaSpoutConfig spoutConf =  KafkaSpoutConfig.builder(bootStrapServers, topic)
+		        .setGroupId(consumerGroupId)
+		        .setOffsetCommitPeriodMs(10_000)
+		        .setFirstPollOffsetStrategy(FirstPollOffsetStrategy.EARLIEST)
+		        .setMaxUncommittedOffsets(1000000)
+		        .setRetry(new KafkaSpoutRetryExponentialBackoff(KafkaSpoutRetryExponentialBackoff.TimeInterval.microSeconds(500),
+		                KafkaSpoutRetryExponentialBackoff.TimeInterval.milliSeconds(2), Integer.MAX_VALUE, KafkaSpoutRetryExponentialBackoff.TimeInterval.seconds(10)))
+		        .build();
+		
+		// 1. spout reads data
+		@SuppressWarnings("unchecked")
+		KafkaSpout<String, String> spout = new KafkaSpout<String, String>(spoutConf);
+		builder.setSpout("spout", spout, parallelismHint);
+		
+		//2
+		ParseDelimitedTextBolt reader = new ParseDelimitedTextBolt(topologyConfig, StormUtils.getOutputfields(spout));
+		builder.setBolt("reader", reader, parallelismHint).localOrShuffleGrouping("spout");
+		
+		//3
+		CallStatOrigTermBolt callStat = new CallStatOrigTermBolt(topologyConfig, StormUtils.getOutputfields(reader));
 		builder.setBolt("callStat", callStat).localOrShuffleGrouping("reader");
 		
+		//4
 		//The timebucket bolt has two output streams: Domestic Calls and International calls
-		IRichBolt timebucket = new TimeBucketBolt(topologyConfig, StormUtils.getOutputfields(callStat));
+		TimeBucketBolt timebucket = new TimeBucketBolt(topologyConfig, StormUtils.getOutputfields(callStat));
 		builder.setBolt("timebucket", timebucket).localOrShuffleGrouping("callStat");
 		
 		
 //		IRichBolt logger = new ConsoleLoggerBolt(topologyConfig, StormUtils.getOutputfields(timebucket, TimeBucketBolt.DOMESTIC_STREAM));
 //		builder.setBolt("consoleLogger", logger).localOrShuffleGrouping("timebucket", TimeBucketBolt.DOMESTIC_STREAM);
 		
-		
-		IRichBolt intlBolt = new EnrichInternationalCallsBolt(topologyConfig, StormUtils.getOutputfields(timebucket, TimeBucketBolt.INTERNATIONAL_STREAM));
+		//5a
+		EnrichInternationalCallsBolt intlBolt = new EnrichInternationalCallsBolt(topologyConfig, StormUtils.getOutputfields(timebucket, TimeBucketBolt.INTERNATIONAL_STREAM));
 		builder.setBolt("intlBolt", intlBolt).localOrShuffleGrouping("timebucket", TimeBucketBolt.INTERNATIONAL_STREAM);
 		
-		IRichBolt domBolt = new EnrichDomesticCallsBolt(topologyConfig, StormUtils.getOutputfields(timebucket, TimeBucketBolt.DOMESTIC_STREAM));
+		//5b
+		EnrichDomesticCallsBolt domBolt = new EnrichDomesticCallsBolt(topologyConfig, StormUtils.getOutputfields(timebucket, TimeBucketBolt.DOMESTIC_STREAM));
 		builder.setBolt("domBolt", domBolt).localOrShuffleGrouping("timebucket", TimeBucketBolt.DOMESTIC_STREAM);
 		
-		IRichBolt pdd = new PDDandEarlyEvents(topologyConfig, StormUtils.getOutputfields(intlBolt));
-		builder.setBolt("pdd", pdd).localOrShuffleGrouping("intlBolt").localOrShuffleGrouping("domBolt");
+		//6
+		PDDandEarlyEvents pdd = new PDDandEarlyEvents(topologyConfig, StormUtils.getOutputfields(intlBolt));
+		builder.setBolt("pdd", pdd)
+			.localOrShuffleGrouping("intlBolt")
+			.localOrShuffleGrouping("domBolt");
 		
-		IRichBolt dimlookup = new DimLookupBolt(topologyConfig, StormUtils.getOutputfields(pdd));
+		//7
+		DimLookupBolt dimlookup = new DimLookupBolt(topologyConfig, StormUtils.getOutputfields(pdd));
 		builder.setBolt("dimlookup", dimlookup).localOrShuffleGrouping("pdd");
 		
 		//list the fields we want to keep in the order we want them output.
 		List<String> cdr_fact = Arrays.asList(new String[]{"call_ts", "geo_id", "cust_id","vend_id","cust_rel_id","vend_rel_id","route","connect","early_event","call_duration_cust","i_pdd","e_pdd","orig_number","term_number"});
 		
-		IRichBolt select = new SelectFieldsBolt(topologyConfig, StormUtils.getOutputfields(dimlookup), SelectType.RETAIN, cdr_fact);
+		//8
+		SelectFieldsBolt select = new SelectFieldsBolt(topologyConfig, StormUtils.getOutputfields(dimlookup), SelectType.RETAIN, cdr_fact);
 		builder.setBolt("select", select).localOrShuffleGrouping("dimlookup");
 	
-
-		
-		IRichBolt writer = new PhoenixFactWriter(topologyConfig, StormUtils.getOutputfields(select));
+		//9
+		PhoenixFactWriter writer = new PhoenixFactWriter(topologyConfig, StormUtils.getOutputfields(select));
 		builder.setBolt("writer", writer, 1).localOrShuffleGrouping("select");
 		
 		return builder;

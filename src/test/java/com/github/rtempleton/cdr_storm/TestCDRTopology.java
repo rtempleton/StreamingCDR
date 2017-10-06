@@ -7,6 +7,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.github.rtempleton.poncho.TextFileProducer;
+import com.github.rtempleton.poncho.test.AbstractTestCase;
 
 public class TestCDRTopology extends AbstractTestCase {
 	

@@ -80,7 +80,7 @@
   "name" : "I_tg_id",
   "type" : "INTEGER",
   "format" : "",
-  "nullVal" : "0"
+  "nullVal" : 0
 }, {
   "name" : "I_iam_t",
   "type" : "TIMESTAMP",
@@ -145,7 +145,7 @@
   "name" : "I_rel_cause",
   "type" : "INTEGER",
   "format" : "",
-  "nullVal" : "0"
+  "nullVal" : 0
 }, {
   "name" : "E_cce_id",
   "type" : "INTEGER",
@@ -162,7 +162,7 @@
   "name" : "E_tg_id",
   "type" : "INTEGER",
   "format" : "",
-  "nullVal" : "0"
+  "nullVal" : 0
 }, {
   "name" : "E_setup_t",
   "type" : "TIMESTAMP",
@@ -215,7 +215,7 @@
   "name" : "E_rel_cause",
   "type" : "INTEGER",
   "format" : "",
-  "nullVal" : "0"
+  "nullVal" : 0
 }, {
   "name" : "col55",
   "type" : "STRING",
@@ -552,7 +552,7 @@
   "name" : "call_duration_cust",
   "type" : "FLOAT",
   "format" : "",
-  "nullVal" : "0.0"
+  "nullVal" : 0.0
 }, {
   "name" : "I_rel_direction",
   "type" : "INTEGER",
